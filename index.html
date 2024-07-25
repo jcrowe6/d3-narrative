@@ -91,7 +91,7 @@
 <div id="text-container">
     <p id="textbox"></p>
     <div id="filters">
-        <h4>Filters</h4>
+        <h4>Settings</h4>
         <ul style="list-style-type: none">
         <li><input type="checkbox" id="color-fuel-chk" checked="checked">Color by fuel type</input></li>
         <li><input type="checkbox" id="color-make-chk">Color by make</input></li>
@@ -200,7 +200,7 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             xdomain: [0,140],
             ydomain: [0,140],
             r: 3,
-            text: "This dataset is of many cars from 2017, including information about their fuel efficiency along with other features \n\n \
+            text: "This dataset is of many cars from 2017, including information about their fuel efficiency along with other features. \n\n \
                     First I've plotted their MPG on the Highway vs. City. As you would expect, there is a strong correlation. \n\n \
                     However, there appears to be some outliers.",
             annotations: [
@@ -217,7 +217,7 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             xdomain: [80,120],
             ydomain: [80,140],
             r: 5,
-            text: "Now we've zoomed in, and color-coded the points by their fuel type. Yellow will stand for electric vehicles \n\n \
+            text: "Now we've zoomed in, and color-coded the points by their fuel type. Yellow will stand for electric vehicles. \n\n \
                     As you can see, all of these outlier points are electric vehicles. \n\n \
                     You can hover over a point to see the make of it.",
             annotations: null,
@@ -227,8 +227,8 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             xdomain: [0,140],
             ydomain: [0,140],
             r: 3,
-            text: "Zooming back out reveals the other two fuel types: blue for Gasoline, and red for Diesel \n\n \
-                    Next we'll zoom in on this cluster and see if we can find any more patterns using our last feature: number of cylinders in the engine",
+            text: "Zooming back out reveals the other two fuel types: blue for Gasoline, and red for Diesel. \n\n \
+                    Next we'll zoom in on this cluster and see if we can find any more patterns using our last feature: number of cylinders in the engine.",
             annotations: [
                 {
                     note: { label: "Non-Electric Cars" },
@@ -247,8 +247,8 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             r: 5,
             text: "Here the points are scaled based on the number of engine cylinders: larger points denoting more cylinders. \n\n \
                     A pattern emerges here, too. It looks like fewer cylinders tends to indicate better efficiency. \n\n \
-                    Feel free to adjust the settings below to explore the data for yourself. \n\n\
-                    Remember you can hover over points to see the make.",
+                    Feel free to adjust the settings below to explore the data for yourself. Remember you can hover over points to see the make. \n\n\
+                    Thanks for reading! ⭐",
             annotations: null,
             color: true,
             size: true
