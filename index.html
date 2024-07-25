@@ -2,12 +2,17 @@
 <meta charset="utf-8">
 
 <script src="https://d3js.org/d3.v4.js"></script>
+<link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
 
 <style>
     body {
       background-color: #FAF9F8;
-      font-family: Arial, sans-serif;
+      font-family: Lato, sans-serif;
+      display: flex;
     }
+
+    
     
     #container {
         margin-top: 5%;
@@ -15,6 +20,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        min-width: 60%;
     }
 
     #btn-container {
@@ -41,17 +47,58 @@
     }
 
     #viz {
-        max-width: 50%;
+        max-width: 70%;
+    }
+
+    svg {
+        background-color: white;
+        font-family: 'Lato';
+     }
+
+    .annotation-note-title, text.title {
+      font-weight: bold;
+    }
+
+    text.title {
+      font-size: 1.2em;
+    }
+
+    #text-container {
+        min-width: 40%;
+        font-size: 1.4em;
+    }
+
+    #textbox {
+        margin-top: 30%;
+        max-width: 80%;
+    }
+
+    #filters {
+        padding-top: 2%;
+        max-width: 80%;
     }
 </style>
 
 <div id="container">
+
 <div id="viz" ></div>
 <div id="btn-container">
 <button id="btn-left">«</button>
 <button id="btn-right">»</button>
 </div>
 <h3 id="scene_txt">Yo</h3>
+</div>
+<div id="text-container">
+    <p id="textbox"></p>
+    <div id="filters">
+        <h4>Filters</h4>
+        <ul style="list-style-type: none">
+        <li><input type="checkbox" id="color-fuel-chk" checked="checked">Color by fuel type</input></li>
+        <li><input type="checkbox" id="color-make-chk">Color by make</input></li>
+        <li><input type="checkbox" id="size-chk" checked="checked">Size by # cylinders</input></li>
+        <li><input type="checkbox" id="zoom-chk" checked="checked">Zoom in on gas vehicles</input></li>
+        </ul>
+    </div>
 </div>
 
 <script>
@@ -70,7 +117,37 @@ var svg = d3.select("#viz")
 
 d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
     
+    var Tooltip = d3.select("#viz")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("position", "absolute")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
 
+    // Three function that change the tooltip when user hover / move / leave a cell
+    var mouseover = function(d) {
+        Tooltip
+        .style("opacity", 1)
+        d3.select(this)
+        .style("stroke", "black")
+        .style("opacity", 1)
+    }
+    var mousemove = function(d) {
+        Tooltip
+        .html(d.Make)
+        .style("left", (d3.mouse(this)[0]+280) + "px")
+        .style("top", (d3.mouse(this)[1]+100) + "px")
+    }
+    var mouseleave = function(d) {
+        Tooltip
+        .style("opacity", 0)
+        d3.select(this)
+        .style("stroke", "none")
+        .style("opacity", 0.8)
+    }
 
     var x = d3.scaleLinear()
     .domain([0, 140])
@@ -110,36 +187,127 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
     .append("circle")
         .attr("cx", function (d) { return x(d.AverageHighwayMPG); } )
         .attr("cy", function (d) { return y(d.AverageCityMPG); } )
-        .attr("r", 2.5)
         .style("fill", "#69b3a2")
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave)
 
     var circles = svg.selectAll("circle");
-    
+
     var scene = 0;
     var parameters = [
         {
             xdomain: [0,140],
             ydomain: [0,140],
-            r: 2
+            r: 3,
+            text: "This dataset is of many cars from 2017, including information about their fuel efficiency along with other features \n\n \
+                    First I've plotted their MPG on the Highway vs. City. As you would expect, there is a strong correlation. \n\n \
+                    However, there appears to be some outliers.",
+            annotations: [
+                {
+                    note: { title:"Outliers", label: "Cars with very good gas mileage" },
+                    x: 500,
+                    y: 150,
+                    dx: -200,
+                    dy: -30
+                }
+            ].map(function(d){ d.color = "#E8336D"; return d})
         },
         {
             xdomain: [80,120],
             ydomain: [80,140],
-            r: 4
+            r: 5,
+            text: "Now we've zoomed in, and color-coded the points by their fuel type. Yellow will stand for electric vehicles \n\n \
+                    As you can see, all of these outlier points are electric vehicles. \n\n \
+                    You can hover over a point to see the make of it.",
+            annotations: null,
+            color: true
         },
         {
             xdomain: [0,140],
             ydomain: [0,140],
-            r: 2
+            r: 3,
+            text: "Zooming back out reveals the other two fuel types: blue for Gasoline, and red for Diesel \n\n \
+                    Next we'll zoom in on this cluster and see if we can find any more patterns using our last feature: number of cylinders in the engine",
+            annotations: [
+                {
+                    note: { label: "Non-Electric Cars" },
+                    x: 300,
+                    y: 500,
+                    dx: 200,
+                    dy: -30
+                }
+            ].map(function(d){ d.color = "#E8336D"; return d}),
+            color: true,
+            makecolor: false
         },
         {
             xdomain: [0,50],
             ydomain: [0,50],
-            r: 4
+            r: 5,
+            text: "Here the points are scaled based on the number of engine cylinders: larger points denoting more cylinders. \n\n \
+                    A pattern emerges here, too. It looks like fewer cylinders tends to indicate better efficiency. \n\n \
+                    Feel free to adjust the settings below to explore the data for yourself. \n\n\
+                    Remember you can hover over points to see the make.",
+            annotations: null,
+            color: true,
+            size: true
         }
     ]
 
     document.getElementById("scene_txt").innerText = `Scene: ${scene+1}/${parameters.length}`;
+    
+    var dom = ["Gasoline", "Diesel", "Electricity"];
+    var colors = d3.scaleOrdinal().domain(dom)
+        .range(["blue", "red", "gold"]);
+    
+    var makes = [
+        "Acura",
+        "Alfa Romeo",
+        "Aston Martin",
+        "Audi",
+        "Bentley",
+        "BMW",
+        "Buick",
+        "Cadillac",
+        "Chevrolet",
+        "Chrysler",
+        "Dodge",
+        "Ferrari",
+        "Fiat",
+        "Genesis",
+        "GMC",
+        "Honda",
+        "Hyundai",
+        "Infiniti",
+        "Jaguar",
+        "Jeep",
+        "Kia",
+        "Lamborghini",
+        "Land Rover",
+        "Lexus",
+        "Lincoln",
+        "Lotus",
+        "Maserati",
+        "Mazda",
+        "McLaren Automotive",
+        "Mercedes-Benz",
+        "MINI",
+        "Mitsubishi",
+        "Nissan",
+        "Porsche",
+        "Ram",
+        "Rolls-Royce",
+        "Roush Performance",
+        "smart",
+        "Subaru",
+        "Tesla",
+        "Toyota",
+        "Volkswagen",
+        "Volvo"
+    ]
+    var carcolors = d3.scaleOrdinal().domain(makes)
+        .range(d3.schemeCategory10.concat(d3.schemeObservable10).concat(d3.schemePaired).concat(d3.schemeSet3));
 
     function update_scene() {
         // Update the x and y scales
@@ -161,10 +329,46 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             .duration(1000)
             .attr("cx", function(d) { return x(d.AverageHighwayMPG); })
             .attr("cy", function(d) { return y(d.AverageCityMPG); })
-            .attr("r", parameters[scene].r);
+            .attr("r", function(d) {
+                if (parameters[scene].size) 
+                    {return d.EngineCylinders} 
+                else 
+                    {return parameters[scene].r}; 
+            })
+            .style("fill", function(d){
+                if (parameters[scene].color) {
+                    return colors(d.Fuel)
+                    
+                } else if (parameters[scene].makecolor) {
+                    console.log(carcolors(d.Make));
+                    return carcolors(d.Make)
+                } else {
+                    return "#69b3a2"
+                }; 
+            });
 
         document.getElementById("scene_txt").innerText = `Scene: ${scene+1}/${parameters.length}`;
+        document.getElementById("textbox").innerText = parameters[scene].text;
+        if (scene === parameters.length-1) {
+            document.getElementById("filters").style.display = 'block';
+        } else {
+            document.getElementById("filters").style.display = 'none';
+        }
+
+        d3.select(".annotation-group").remove();
+        if (parameters[scene].annotations) {
+            const makeAnnotations = d3.annotation()
+                .type(d3.annotationLabel)
+                .annotations(parameters[scene].annotations);
+            d3.select("svg")
+                .append("g")
+                .attr("class", "annotation-group")
+                .call(makeAnnotations);
+        }
+        
     }
+
+    update_scene()
 
     // Add event listeners to the buttons
     d3.select("#btn-right").on("click", function() {
@@ -179,6 +383,47 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
             scene = scene - 1;
         }
         update_scene()
+    });
+
+    d3.selectAll("input").on("change", function () {
+        var selected = this.id, 
+            on = this.checked;
+        switch (selected) {
+            case "color-fuel-chk":
+                if (on) {
+                    parameters[scene].color = true;
+                } else {
+                    parameters[scene].color = false;
+                }
+                break
+            case "color-make-chk":
+                if (on) {
+                    parameters[scene].makecolor = true;
+                } else {
+                    parameters[scene].makecolor = false;
+                }
+                break
+            case "size-chk":
+                if (on) {
+                    parameters[scene].size = true;
+                } else {
+                    parameters[scene].size = false;
+                }
+                break
+            case "zoom-chk":
+                if (on) {
+                    parameters[scene].xdomain = [0,50];
+                    parameters[scene].ydomain = [0,50];
+                    parameters[scene].r = 5;
+                } else {
+                    parameters[scene].xdomain = [0,140];
+                    parameters[scene].ydomain = [0,140];
+                    parameters[scene].r = 3;
+                }
+                break
+        }
+        console.log(parameters);
+        update_scene();
     });
 })
 
