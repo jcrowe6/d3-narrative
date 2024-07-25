@@ -5,20 +5,39 @@
 
 <style>
     body {
-      background-color: linen;
+      background-color: #FAF9F8;
+      font-family: Arial, sans-serif;
     }
     
     #container {
-        margin-top: 10%;
+        margin-top: 5%;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
     }
 
-    #container {
-        margin-top: 2%;
+    #btn-container {
+        padding-top: 10px;
+        width: 120px;
         display: flex;
+        justify-content: space-between;
+    }
+
+    button {
+        width: 50px;
+        height: 50px;
+        border: none;
+        border-radius: 4px;
+        background-color: #5987eb; 
+        color: white;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        font-size: 35px;
+        transition: background-color 0.3s ease;
     }
 
     #viz {
@@ -29,14 +48,15 @@
 <div id="container">
 <div id="viz" ></div>
 <div id="btn-container">
-<button id="btn-left"><h1>«</h1></button>
-<button id="btn-right"><h1>»</h1></button>
+<button id="btn-left">«</button>
+<button id="btn-right">»</button>
 </div>
+<h3 id="scene_txt">Yo</h3>
 </div>
 
 <script>
 
-var margin = {top: 10, right: 30, bottom: 30, left: 60};
+var margin = {top: 10, right: 30, bottom: 45, left: 60};
 var width = 800 - margin.left - margin.right;
 var height = 700 - margin.top - margin.bottom;
 
@@ -49,20 +69,39 @@ var svg = d3.select("#viz")
             "translate(" + margin.left + "," + margin.top + ")");
 
 d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
+    
 
 
     var x = d3.scaleLinear()
     .domain([0, 140])
     .range([ 0, width ]);
-    svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
     var y = d3.scaleLinear()
     .domain([0, 140])
     .range([ height, 0]);
+    
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisLeft(y);
+
     svg.append("g")
-    .call(d3.axisLeft(y));
+    .attr("transform", "translate(0," + height + ")")
+    .attr("class", "x axis")
+    .call(xAxis);
+    svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
+
+    svg.append("text")             
+    .attr("transform", "translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+    .style("text-anchor", "middle")
+    .text("Avg. Highway MPG");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Avg. City MPG");
 
     svg.append('g')
     .selectAll("dot")
@@ -71,9 +110,76 @@ d3.csv("https://flunky.github.io/cars2017.csv", function(data) {
     .append("circle")
         .attr("cx", function (d) { return x(d.AverageHighwayMPG); } )
         .attr("cy", function (d) { return y(d.AverageCityMPG); } )
-        .attr("r", 1.5)
+        .attr("r", 2.5)
         .style("fill", "#69b3a2")
 
+    var circles = svg.selectAll("circle");
+    
+    var scene = 0;
+    var parameters = [
+        {
+            xdomain: [0,140],
+            ydomain: [0,140],
+            r: 2
+        },
+        {
+            xdomain: [80,120],
+            ydomain: [80,140],
+            r: 4
+        },
+        {
+            xdomain: [0,140],
+            ydomain: [0,140],
+            r: 2
+        },
+        {
+            xdomain: [0,50],
+            ydomain: [0,50],
+            r: 4
+        }
+    ]
+
+    document.getElementById("scene_txt").innerText = `Scene: ${scene+1}/${parameters.length}`;
+
+    function update_scene() {
+        // Update the x and y scales
+        x.domain(parameters[scene].xdomain);
+        y.domain(parameters[scene].ydomain);
+
+        // Transition the axes
+        svg.select(".x.axis")
+            .transition()
+            .duration(1000)
+            .call(xAxis);
+
+        svg.select(".y.axis")
+            .transition()
+            .duration(1000)
+            .call(yAxis);
+
+        circles.transition()
+            .duration(1000)
+            .attr("cx", function(d) { return x(d.AverageHighwayMPG); })
+            .attr("cy", function(d) { return y(d.AverageCityMPG); })
+            .attr("r", parameters[scene].r);
+
+        document.getElementById("scene_txt").innerText = `Scene: ${scene+1}/${parameters.length}`;
+    }
+
+    // Add event listeners to the buttons
+    d3.select("#btn-right").on("click", function() {
+        if (scene < parameters.length - 1) {
+            scene = scene + 1;
+        }
+        update_scene()
+    });
+
+    d3.select("#btn-left").on("click", function() {
+        if (scene > 0) {
+            scene = scene - 1;
+        }
+        update_scene()
+    });
 })
 
 </script>
